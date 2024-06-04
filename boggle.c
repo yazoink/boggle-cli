@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <time.h>
+#include <sys/wait.h>
 
 #define MAX 255
 #define LETTERS 16
@@ -12,18 +13,13 @@ char *gen_letters(void);
 int get_num(int opt_num);
 void play(void);
 int rand_letter(void);
+int verify_letters(char *letters, char *word);
+int verify_word(char *word);
 
 int main(void) {
     int num;
     while (1) {
         system("clear");
-        printf("~~> W O R D  B O G G L E <~~\n"
-                "\n"
-                "Select a number:\n"
-                "\t1) Play\n"
-                "\t2) Help\n"
-                "\t3) Exit\n"
-                "\n");
         num = get_num(3);
 
         switch(num) {
@@ -40,6 +36,13 @@ int main(void) {
 }
 
 void help(void) {
+    system("clear");
+    printf("~~> W O R D  B O G G L E <~~\n\n"
+            "- Find as many words as possible using the letters in the grid.\n"
+            "- The timer for each game is set to 3 minutes.\n"
+            "- Try and get the highest score.\n\n"
+            "Press any key to continue.");
+    getchar();
     return;
 }
 
@@ -65,7 +68,15 @@ int get_num(int opt_num) {
     char buf[MAX];
 
     do {
-        printf(">> ");
+        system("clear");
+        printf("~~> W O R D  B O G G L E <~~\n"
+                "\n"
+                "Select a number:\n"
+                "\t1) Play\n"
+                "\t2) Help\n"
+                "\t3) Exit\n"
+                "\n"
+                ">> ");
         fgets(buf, MAX, stdin);
     } while(buf[0] == '\n');
     buf[strlen(buf) - 1] = '\0';
@@ -88,22 +99,27 @@ int get_num(int opt_num) {
 void play(void) {
     char *letters;
     time_t start_time, current_time;
-    int score = 0;
+    int score, len;
+    
+    score = 0;
 
     letters = gen_letters();
 
     start_time = time(NULL);
 
     while (1) {
-        char buf[MAX];
+        char buf[MAX], **found_words;
+        int found_words_num = 0;
+
         current_time = time(NULL);
         if (current_time - start_time >= 60) {
             break;
         }
 
-        system("clear");
-        printf("Find as many words as you can...\n");
-        printf(" ___ ___ ___ ___ \n"
+        do {
+            system("clear");
+            printf("Find as many words as you can...\n");
+            printf(" ___ ___ ___ ___ \n"
             "| %c | %c | %c | %c |\n"
             " --- --- --- --- \n"
             "| %c | %c | %c | %c |\n"
@@ -112,12 +128,27 @@ void play(void) {
             " --- --- --- --- \n"
             "| %c | %c | %c | %c |\n"
             " --- --- --- --- \n", letters[0], letters[1], letters[2], letters[3], letters[4], letters[5], letters[6], letters[7], letters[8], letters[9], letters[10], letters[11], letters[12], letters[13], letters[14], letters[15]);
-        printf("Score: %d\n\n", score);
-        printf(">> ");
-        fgets(buf, MAX, stdin);
+            printf("Score: %d\n\n", score);
+            printf(">> ");
+            fgets(buf, MAX, stdin);
+        } while(buf[0] == '\n');
+
+        buf[strlen(buf) - 1] = '\0';
+
+        for (int i = 0; i < strlen(buf); i++) {
+            buf[i] = toupper(buf[i]);
+        }
+
+        if (verify_letters(letters, buf) == EXIT_SUCCESS) {
+            if ((len = verify_word(buf)) != EXIT_FAILURE) {
+                score = score + len; // todo: make sure word has not already been entered
+            }
+        }
     }
     free(letters);
-    exit(0);
+    system("clear");
+    printf("Time is up!\n\nYour score was: %d\nPress any key to continue...\n", score);
+    getchar();
 }
 
 int rand_letter(void) {
@@ -125,4 +156,46 @@ int rand_letter(void) {
     srand(time(NULL));
     num = rand() % 26 + 65;
     return num;
+}
+
+int verify_letters(char *letters, char *word) {
+    char *letters_copy = (char *)malloc(sizeof(letters));
+    strcpy(letters_copy, letters);
+    for (int i = 0; i < strlen(word); i++) { // for letters in word
+        int found = 0;
+        for (int j = 0; j < LETTERS; j++) { // for letters in grid
+            if (word[i] == letters_copy[j]) {
+                found = 1;
+                letters_copy[j] = 0;
+                continue;
+            }
+        }
+        if (found == 0) {
+            free(letters_copy);
+            return EXIT_FAILURE;
+        }
+    }
+    free(letters_copy);
+    return EXIT_SUCCESS;
+}
+
+int verify_word(char *word) {
+    int status, exit_status;
+    char cmd[MAX];
+    snprintf(cmd, MAX, "grep -i -w -q %s wordlist.txt", word);
+    status = system(cmd);
+    if (status == -1) {
+        fprintf(stderr, "Error: could not execute grep.\n");
+        exit(EXIT_FAILURE);
+    } else if (WIFEXITED(status)) {
+        exit_status = WEXITSTATUS(status);
+        if (exit_status == 0) {
+            return strlen(word);
+        } else {
+            return EXIT_FAILURE;
+        }
+    } else {
+        fprintf(stderr, "Error: grep returned unexpected exit code.\n");
+        exit(EXIT_FAILURE);
+    }
 }
