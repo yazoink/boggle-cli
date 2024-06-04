@@ -108,8 +108,7 @@ void play(void) {
     start_time = time(NULL);
 
     while (1) {
-        char buf[MAX], **found_words;
-        int found_words_num = 0;
+        char buf[MAX];
 
         current_time = time(NULL);
         if (current_time - start_time >= 60) {
