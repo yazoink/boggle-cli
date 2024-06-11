@@ -15,6 +15,7 @@ void play(void);
 int rand_letter(void);
 int verify_letters(char *letters, char *word);
 int verify_word(char *word);
+int verify_word_original(char **found_words, int found_words_num, char *word);
 
 int main(void) {
     int num;
@@ -78,8 +79,8 @@ int get_num(int opt_num) {
                 "\n"
                 ">> ");
         fgets(buf, MAX, stdin);
-    } while(buf[0] == '\n');
-    buf[strlen(buf) - 1] = '\0';
+    } while(buf[0] == '\n'); // while enter is pressed without input
+    buf[strlen(buf) - 1] = '\0'; // replace newline with nul terminator
 
     if (strlen(buf) != 1) {
         return get_num(opt_num);
@@ -97,21 +98,26 @@ int get_num(int opt_num) {
 }
 
 void play(void) {
-    char *letters;
+    char *letters, **found_words;
     time_t start_time, current_time;
-    int score, len;
+    int score, len, found_words_num;
+    FILE *f;
     
     score = 0;
-
     letters = gen_letters();
-
     start_time = time(NULL);
+    found_words = (char **)malloc(sizeof(char *));
+    if (found_words == NULL) {
+        fprintf(stderr, "Error: memory allocation failed.\n");
+        exit(EXIT_FAILURE);
+    }
+    found_words_num = 0;
 
     while (1) {
         char buf[MAX];
 
         current_time = time(NULL);
-        if (current_time - start_time >= 60) {
+        if (current_time - start_time >= 60) { // if game has run for over 60 seconds, stop
             break;
         }
 
@@ -134,31 +140,55 @@ void play(void) {
 
         buf[strlen(buf) - 1] = '\0';
 
-        for (int i = 0; i < strlen(buf); i++) {
+        for (int i = 0; i < strlen(buf); i++) { // capitalize all letters to ensure case insensitivity
             buf[i] = toupper(buf[i]);
         }
 
-        if (verify_letters(letters, buf) == EXIT_SUCCESS) {
-            if ((len = verify_word(buf)) != EXIT_FAILURE) {
-                score = score + len; // todo: make sure word has not already been entered
+        if (verify_letters(letters, buf) == EXIT_SUCCESS) { // ensure all letters in word are in grid
+            if ((len = verify_word(buf)) != EXIT_FAILURE) { // ensure word is in word list
+                if (verify_word_original(found_words, found_words_num, buf) == EXIT_SUCCESS) { // ensure word has not been entered before
+                    found_words[found_words_num] = (char *)malloc(sizeof(buf) + 1); // allocate memory for word in found words array
+                    if (found_words[found_words_num] == NULL) {
+                        fprintf(stderr, "Error: memory allocation failed.\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    strcpy(found_words[found_words_num], buf);
+                    found_words = realloc(found_words, sizeof(found_words) + sizeof(char *)); // resize array to allow for another string to be added (size of the array + size of pointer string)
+                    found_words_num++;
+                    score = score + len;
+                }
             }
         }
     }
+    for (int i = 0; i < found_words_num; i++) {
+        free(found_words[i]);
+    }
+    free(found_words);
     free(letters);
+
     system("clear");
+
+    f = fopen("scores.txt", "w");
+    fprintf(f, "%d\n", score); // add score to text file
+    fclose(f);
+
     printf("Time is up!\n\nYour score was: %d\nPress any key to continue...\n", score);
     getchar();
 }
 
 int rand_letter(void) {
     int num;
-    srand(time(NULL));
-    num = rand() % 26 + 65;
+    srand(time(NULL)); // initialize
+    num = rand() % 26 + 65; // pick random number between 65 and 90 (ascii decimals for alphabet)
     return num;
 }
 
 int verify_letters(char *letters, char *word) {
-    char *letters_copy = (char *)malloc(sizeof(letters));
+    char *letters_copy = (char *)malloc(sizeof(letters)); // copy of letters array to be modified
+    if (letters_copy == NULL) {
+        fprintf(stderr, "Error: memory allocation failed.\n");
+        exit(EXIT_FAILURE);
+    }
     strcpy(letters_copy, letters);
     for (int i = 0; i < strlen(word); i++) { // for letters in word
         int found = 0;
@@ -189,7 +219,7 @@ int verify_word(char *word) {
     } else if (WIFEXITED(status)) {
         exit_status = WEXITSTATUS(status);
         if (exit_status == 0) {
-            return strlen(word);
+            return strlen(word); // if execution is a success, function returns length of the word
         } else {
             return EXIT_FAILURE;
         }
@@ -197,4 +227,13 @@ int verify_word(char *word) {
         fprintf(stderr, "Error: grep returned unexpected exit code.\n");
         exit(EXIT_FAILURE);
     }
+}
+
+int verify_word_original(char **found_words, int found_words_num, char *word) {
+    for (int i = 0; i < found_words_num; i++) {
+        if (strcmp(found_words[i], word) == 0) {
+            return EXIT_FAILURE;
+        }
+    }
+    return EXIT_SUCCESS;
 }
