@@ -7,6 +7,7 @@
 
 #define MAX 255
 #define LETTERS 16
+#define MAX_WORDS 512
 
 void help(void);
 char *gen_letters(void);
@@ -106,7 +107,7 @@ void play(void) {
     score = 0;
     letters = gen_letters();
     start_time = time(NULL);
-    found_words = malloc(sizeof(char *));
+    found_words = malloc(sizeof(char *) * MAX_WORDS);
     if (found_words == NULL) {
         fprintf(stderr, "Error: memory allocation failed.\n");
         exit(EXIT_FAILURE);
@@ -147,14 +148,13 @@ void play(void) {
         if (verify_letters(letters, buf) == EXIT_SUCCESS) { // ensure all letters in word are in grid
             if ((len = verify_word(buf)) != EXIT_FAILURE) { // ensure word is in word list
                 if (verify_word_original(found_words, found_words_num, buf) == EXIT_SUCCESS) { // ensure word has not been entered before
-                    found_words[found_words_num] = malloc(sizeof(buf)); // allocate memory for word in found words array
+                    found_words[found_words_num] = malloc(sizeof(buf) + 1); // allocate memory for word in found words array
                     if (found_words[found_words_num] == NULL) {
                         fprintf(stderr, "Error: memory allocation failed.\n");
                         exit(EXIT_FAILURE);
                     }
                     strcpy(found_words[found_words_num], buf);
                     found_words_num++;
-                    found_words = realloc(found_words, found_words_num * sizeof(char *)); // resize array to allow for another string to be added
                     score = score + len;
                 }
             }
