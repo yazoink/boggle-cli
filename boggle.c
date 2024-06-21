@@ -162,6 +162,7 @@ void play(void) {
     }
     free(found_words);
     free(letters);
+    free(file_name);
 
     system("clear");
 
