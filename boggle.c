@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <time.h>
 #include <sys/wait.h>
+#include "config.h"
 
 #define MAX 255
 #define LETTERS 16
@@ -63,7 +64,6 @@ char *gen_letters(void) {
 }
 
 int get_num(int opt_num) {
-    int num;
     char buf[MAX];
 
     do {
@@ -96,9 +96,9 @@ int get_num(int opt_num) {
 }
 
 void play(void) {
-    char *letters, **found_words;
+    char *letters, **found_words, *file_name;
     time_t start_time, current_time;
-    int score, len, found_words_num;
+    int score, len, found_words_num, file_name_size;
     FILE *f;
     
     score = 0;
@@ -115,7 +115,7 @@ void play(void) {
         char buf[MAX];
 
         current_time = time(NULL);
-        if (current_time - start_time >= 60) { // if game has run for over 60 seconds, stop
+        if (current_time - start_time >= TIMER_SECONDS) { // if game has run for over 60 seconds, stop
             break;
         }
 
@@ -138,7 +138,7 @@ void play(void) {
 
         buf[strlen(buf) - 1] = '\0';
 
-        for (int i = 0; i < strlen(buf); i++) { // capitalize all letters to ensure case insensitivity
+        for (size_t i = 0; i < strlen(buf); i++) { // capitalize all letters to ensure case insensitivity
             buf[i] = toupper(buf[i]);
         }
 
@@ -165,7 +165,11 @@ void play(void) {
 
     system("clear");
 
-    f = fopen("scores.txt", "w");
+
+    file_name_size = (sizeof(NAME) + sizeof("test.txt") + 1) * sizeof(char);
+    file_name = malloc(file_name_size);
+    snprintf(file_name, file_name_size, "%stest.txt", NAME);
+    f = fopen(file_name, "w");
     fprintf(f, "%d\n", score); // add score to text file
     fclose(f);
 
@@ -187,7 +191,7 @@ int verify_letters(char *letters, char *word) {
         exit(EXIT_FAILURE);
     }
     strcpy(letters_copy, letters);
-    for (int i = 0; i < strlen(word); i++) { // for letters in word
+    for (size_t i = 0; i < strlen(word); i++) { // for letters in word
         int found = 0;
         for (int j = 0; j < LETTERS; j++) { // for letters in grid
             if (word[i] == letters_copy[j]) {
