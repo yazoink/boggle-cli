@@ -8,7 +8,7 @@ $ git clone https://github.com/yazoink/boggle-cli
 $ make
 $ ./boggle
 ```
-## How to play
+## How-to
 There is a timer set for each game, the length can be set in *config.h* under *TIMER_SECONDS* but the default is 60 seconds. The objective is to find as many words as possible using only the letters in the grid. Your score is increased by the amount of letters in each word you find.
 
 Your score is exported to a text file under the name *yournamescores.txt* every time a game has been completed. You can set your name in *config.h* under *NAME*.
