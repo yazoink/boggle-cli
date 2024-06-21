@@ -2,5 +2,6 @@ There is a timer set for each game, the length can be set in "config.h" under "T
 
 Your score is exported to a text file under the name <name>test.txt every time a game has been completed. You can set your name in "config.h" under "NAME".
 
+The default wordlist is not perfect and you can swap it out for your own newline-separated wordlist under the name wordlist.txt if you choose.
 
 Press any key to continue.

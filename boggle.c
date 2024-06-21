@@ -166,9 +166,9 @@ void play(void) {
     system("clear");
 
 
-    file_name_size = (sizeof(NAME) + sizeof("test.txt") + 1) * sizeof(char);
+    file_name_size = (sizeof(NAME) + sizeof("scores.txt") + 1) * sizeof(char);
     file_name = malloc(file_name_size);
-    snprintf(file_name, file_name_size, "%stest.txt", NAME);
+    snprintf(file_name, file_name_size, "%sscores.txt", NAME);
     f = fopen(file_name, "w");
     fprintf(f, "%d\n", score); // add score to text file
     fclose(f);

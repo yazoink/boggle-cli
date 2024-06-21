@@ -11,6 +11,6 @@ $ ./boggle
 ## How to play
 There is a timer set for each game, the length can be set in *config.h* under *TIMER_SECONDS* but the default is 60 seconds. The objective is to find as many words as possible using only the letters in the grid. Your score is increased by the amount of letters in each word you find.
 
-Your score is exported to a text file under the name *yournametest.txt* every time a game has been completed. You can set your name in *config.h* under *NAME*.
+Your score is exported to a text file under the name *yournamescores.txt* every time a game has been completed. You can set your name in *config.h* under *NAME*.
 
-The current wordlist is not perfect and you can swap it out for your own newline-separated wordlist under the name *wordlist.txt* if you choose.
+The default wordlist is not perfect and you can swap it out for your own newline-separated wordlist under the name *wordlist.txt* if you choose.
