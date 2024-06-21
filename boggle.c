@@ -39,11 +39,8 @@ int main(void) {
 
 void help(void) {
     system("clear");
-    printf("~~> W O R D  B O G G L E <~~\n\n"
-            "- Find as many words as possible using the letters in the grid.\n"
-            "- The timer for each game is set to 3 minutes.\n"
-            "- Try and get the highest score.\n\n"
-            "Press any key to continue.");
+    printf("~~> W O R D  B O G G L E <~~\n\n");
+    system("cat guide.txt");
     getchar();
     return;
 }

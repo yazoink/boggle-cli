@@ -1,0 +1,6 @@
+There is a one minute timer set for each game. The objective is to find as many words as possible using only the letters in the grid. Your score is increased by the amount of letters in each word you find.
+
+Your score is exported to a text file in the current directory every time a game has been completed.
+
+
+Press any key to continue.
